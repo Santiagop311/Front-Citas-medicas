@@ -14,6 +14,33 @@ export function HeroPresentation() {
   return (
     <ThemeProvider>
       <Navbar />
+        {/* 🔽 Menú de navegación principal */}
+      <nav className="bg-gray-100 shadow-md py-3 px-8 flex justify-center lg:justify-start gap-6 border-b border-gray-200">
+        <a
+          href="users"
+          className="text-gray-700 hover:text-blue-500 font-medium transition-colors"
+        >
+          Usuarios
+        </a>
+        <a
+          href="#citas"
+          className="text-gray-700 hover:text-blue-500 font-medium transition-colors"
+        >
+          Citas
+        </a>
+        <a
+          href="#roles"
+          className="text-gray-700 hover:text-blue-500 font-medium transition-colors"
+        >
+          Roles
+        </a>
+        <a
+          href="#configuracion"
+          className="text-gray-700 hover:text-blue-500 font-medium transition-colors"
+        >
+          Configuración
+        </a>
+      </nav>
       <header className="h-full w-screen place-items-center bg-white relative px-8 py-8 lg:mb-36">
         <div className="container mx-auto grid items-center lg:grid-cols-2">
           <div className="text-center lg:text-left pt-32">
