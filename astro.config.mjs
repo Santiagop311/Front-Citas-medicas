@@ -9,4 +9,5 @@ export default defineConfig({
   integrations: [react(), tailwind()],
   site: "https://vocal-druid-4cabbd.netlify.app", 
   base: "/", 
+  output: "server",
 });

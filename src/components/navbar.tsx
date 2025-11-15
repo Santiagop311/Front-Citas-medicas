@@ -8,12 +8,9 @@ import {
   MenuHandler,
   MenuList,
   MenuItem,
-  Avatar,
-  Card,
   IconButton,
 } from "@material-tailwind/react";
 import {
-  CubeTransparentIcon,
   UserCircleIcon,
   CodeBracketSquareIcon,
   Square3Stack3DIcon,
@@ -24,35 +21,51 @@ import {
   PowerIcon,
   Bars2Icon,
 } from "@heroicons/react/24/outline";
- 
-// profile menu component
+
+// --- Opciones del menú de perfil
 const profileMenuItems = [
-  {
-    label: "My Profile",
-    icon: UserCircleIcon,
-  },
-  {
-    label: "Edit Profile",
-    icon: Cog6ToothIcon,
-  },
-  {
-    label: "Inbox",
-    icon: InboxArrowDownIcon,
-  },
-  {
-    label: "Help",
-    icon: LifebuoyIcon,
-  },
-  {
-    label: "Sign Out",
-    icon: PowerIcon,
-  },
+  { label: "My Profile", icon: UserCircleIcon },
+  { label: "Inbox", icon: InboxArrowDownIcon },
+  { label: "Help", icon: LifebuoyIcon },
+  { label: "Sign Out", icon: PowerIcon },
 ];
- 
+
 function ProfileMenu() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const [loadingLogout, setLoadingLogout] = React.useState(false);
   const closeMenu = () => setIsMenuOpen(false);
- 
+
+  const handleLogout = async (e) => {
+    e.stopPropagation();
+    setLoadingLogout(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        await fetch("http://localhost:8000/api/logout", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    } finally {
+      // 🔹 Limpieza local
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      document.cookie =
+        "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+      // 🔹 Indicador visual
+      setTimeout(() => {
+        window.location.href = "/astro-launch-ui/login";
+      }, 800);
+    }
+  };
+
   return (
     <Menu open={isMenuOpen} handler={setIsMenuOpen} placement="bottom-end">
       <MenuHandler>
@@ -61,13 +74,7 @@ function ProfileMenu() {
           color="blue-gray"
           className="flex items-center gap-1 rounded-full py-0.5 pr-2 pl-0.5 lg:ml-auto"
         >
-          <Avatar
-            variant="circular"
-            size="sm"
-            alt="Tania Andrew"
-            className="border border-gray-300 p-0.5"
-            src="https://images.unsplash.com/photo-1589156191108-c762ff4b96ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=986&q=80"
-          />
+          <UserCircleIcon className="h-6 w-6 text-gray-700" />
           <ChevronDownIcon
             strokeWidth={2.5}
             className={`h-3 w-3 transition-transform ${
@@ -76,13 +83,21 @@ function ProfileMenu() {
           />
         </Button>
       </MenuHandler>
+
       <MenuList className="p-1">
         {profileMenuItems.map(({ label, icon }, key) => {
           const isLastItem = key === profileMenuItems.length - 1;
+          const isLogout = label === "Sign Out";
+
           return (
             <MenuItem
               key={label}
-              onClick={closeMenu}
+              disabled={loadingLogout && isLogout}
+              onClick={(e) => {
+                closeMenu();
+                if (label === "Sign Out") handleLogout(e);
+                if (label === "My Profile") window.location.href = "/profile";
+              }}
               className={`flex items-center gap-2 rounded ${
                 isLastItem
                   ? "hover:bg-red-500/10 focus:bg-red-500/10 active:bg-red-500/10"
@@ -96,10 +111,36 @@ function ProfileMenu() {
               <Typography
                 as="span"
                 variant="small"
-                className="font-normal"
+                className="font-normal flex items-center gap-2"
                 color={isLastItem ? "red" : "inherit"}
               >
-                {label}
+                {isLogout && loadingLogout ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4 text-red-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                      ></path>
+                    </svg>
+                    Cerrando sesión...
+                  </>
+                ) : (
+                  label
+                )}
               </Typography>
             </MenuItem>
           );
@@ -108,114 +149,47 @@ function ProfileMenu() {
     </Menu>
   );
 }
- 
-// account pages menu
-const accountItems = [
-  {
-    title: "Login",
-    href: "/astro-launch-ui/login"
-  },
-  {
-    title: "Sign Up",
-    href: "/astro-launch-ui/signup"
-  }
-];
 
-function AccountListMenu() {
-  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
- 
-  const triggers = {
-    onMouseEnter: () => setIsMenuOpen(true),
-    onMouseLeave: () => setIsMenuOpen(false),
-  };
- 
-  const renderItems = accountItems.map(({ title, href }) => (
-    <a href={href} key={title}>
-      <MenuItem>
-        <Typography variant="paragraph" color="blue-gray" className="mb-1 font-normal">
-          {title}
-        </Typography>
-      </MenuItem>
-    </a>
-  ));
- 
-  return (
-    <React.Fragment>
-      <Menu open={isMenuOpen} handler={setIsMenuOpen}>
-        <MenuHandler>
-          <Typography as="a" href="#" variant="small" className="font-normal outline-none focus:outline-none">
-            <MenuItem
-              {...triggers}
-              className="hidden items-center gap-2 text-blue-gray-900 lg:flex lg:rounded-full"
-            >
-              <Square3Stack3DIcon className="h-[18px] w-[18px]" /> Account{" "}
-              <ChevronDownIcon
-                strokeWidth={2}
-                className={`h-3 w-3 transition-transform ${
-                  isMenuOpen ? "rotate-180" : ""
-                }`}
-              />
-            </MenuItem>
-          </Typography>
-        </MenuHandler>
-        <MenuList
-          {...triggers}
-          className="hidden grid-cols-7 gap-3 overflow-visible lg:grid"
-        >
-          <ul className="col-span-12 flex w-full flex-col gap-1 outline-none focus:outline-none">
-            {renderItems}
-          </ul>
-        </MenuList>
-      </Menu>
-      <MenuItem className="flex items-center gap-2 text-blue-gray-900 lg:hidden">
-        <Square3Stack3DIcon className="h-[18px] w-[18px]" /> Account{" "}
-      </MenuItem>
-      <ul className="ml-6 flex w-full flex-col gap-1 lg:hidden">
-        {renderItems}
-      </ul>
-    </React.Fragment>
-  );
-}
 
-// nav list menu
+// --- Menú de navegación (Pages)
 const navListMenuItems = [
-  {
-    title: "About Us",
-    href: "/astro-launch-ui/about"
-  },
-  {
-    title: "Landing Page",
-    href: "/astro-launch-ui/landing"
-  },
-  {
-    title: "404",
-    href: "/astro-launch-ui/404"
-  },
+  { title: "Usuarios", href: "/users" },
+  { title: "Gestion de Citas", href: "/citas" },
+  { title: "404", href: "/astro-launch-ui/404" },
 ];
- 
+
 function NavListMenu() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
- 
+
   const triggers = {
     onMouseEnter: () => setIsMenuOpen(true),
     onMouseLeave: () => setIsMenuOpen(false),
   };
- 
+
   const renderItems = navListMenuItems.map(({ title, href }) => (
     <a href={href} key={title}>
       <MenuItem>
-        <Typography variant="paragraph" color="blue-gray" className="mb-1 font-normal">
+        <Typography
+          variant="paragraph"
+          color="blue-gray"
+          className="mb-1 font-normal"
+        >
           {title}
         </Typography>
       </MenuItem>
     </a>
   ));
- 
+
   return (
-    <React.Fragment>
+    <>
       <Menu open={isMenuOpen} handler={setIsMenuOpen}>
         <MenuHandler>
-          <Typography as="a" href="#" variant="small" className="font-normal outline-none focus:outline-none">
+          <Typography
+            as="a"
+            href="#"
+            variant="small"
+            className="font-normal outline-none focus:outline-none"
+          >
             <MenuItem
               {...triggers}
               className="hidden items-center gap-2 text-blue-gray-900 lg:flex lg:rounded-full"
@@ -230,11 +204,12 @@ function NavListMenu() {
             </MenuItem>
           </Typography>
         </MenuHandler>
+
         <MenuList
           {...triggers}
           className="hidden grid-cols-7 gap-3 overflow-visible lg:grid"
         >
-          <ul className="col-span-12 flex w-full flex-col gap-1 outline-none focus:outline-none">
+          <ul className="col-span-12 flex w-full flex-col gap-1">
             {renderItems}
           </ul>
         </MenuList>
@@ -245,25 +220,21 @@ function NavListMenu() {
       <ul className="ml-6 flex w-full flex-col gap-1 lg:hidden">
         {renderItems}
       </ul>
-    </React.Fragment>
+    </>
   );
 }
- 
-// nav list component
+
+// --- Navegación principal ---
 const navListItems = [
-  {
-    label: "Docs",
-    icon: CodeBracketSquareIcon,
-  },
+  { label: "Docs", icon: CodeBracketSquareIcon },
 ];
- 
+
 function NavList() {
   return (
     <ul className="mb-4 mt-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center">
       <NavListMenu />
-      <AccountListMenu />
-
-      {navListItems.map(({ label, icon }, key) => (
+      <ProfileMenu />
+      {navListItems.map(({ label, icon }) => (
         <Typography
           key={label}
           as="a"
@@ -281,36 +252,27 @@ function NavList() {
     </ul>
   );
 }
- 
+
 export default function ComplexNavbar() {
   const [isNavOpen, setIsNavOpen] = React.useState(false);
   const [shouldShowBorder, setShouldShowBorder] = React.useState(false);
 
   const toggleIsNavOpen = () => setIsNavOpen((cur) => !cur);
- 
+
   React.useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 0) {
-        setShouldShowBorder(true);
-      } else {
-        setShouldShowBorder(false);
-      }
+      setShouldShowBorder(window.scrollY > 0);
     };
-
     window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   React.useEffect(() => {
-    window.addEventListener(
-      "resize",
-      () => window.innerWidth >= 960 && setIsNavOpen(false)
-    );
+    window.addEventListener("resize", () => {
+      if (window.innerWidth >= 960) setIsNavOpen(false);
+    });
   }, []);
- 
+
   return (
     <Navbar
       className={`sticky inset-0 z-10 mx-auto max-w-screen-2xl p-2 lg:pl-6 mt-4 transition-shadow ${
@@ -337,19 +299,6 @@ export default function ComplexNavbar() {
         >
           <Bars2Icon className="h-6 w-6" />
         </IconButton>
-        <a href="https://discord.gg/WCvQWMwT" target="_blank">
-          <Button size="sm" color="black" variant="text">
-            <i className="fab fa-discord text-lg leading-none" aria-hidden="true"></i>
-          </Button>
-        </a>
-        <a href="https://github.com/creativetimofficial/astro-launch-ui" target="_blank">
-          <Button size="sm" color="black" variant="text">
-            <i className="fab fa-github text-xl leading-none" aria-hidden="true"></i>
-          </Button>
-        </a>
-        <a href="/astro-launch-ui/#examplePages">
-          <Button color="black">Get started</Button>
-        </a>
       </div>
       <Collapse open={isNavOpen} className="overflow-scroll">
         <NavList />

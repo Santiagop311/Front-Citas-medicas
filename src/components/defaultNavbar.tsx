@@ -38,13 +38,10 @@ const colors = {
 // account pages menu
 const accountItems = [
   {
-    title: "Login",
-    href: "/astro-launch-ui/login"
+    title: "logout",
+    href: "/login"
   },
-  {
-    title: "Sign Up",
-    href: "/astro-launch-ui/signup"
-  }
+
 ];
 
 function AccountListMenu() {
@@ -106,12 +103,12 @@ function AccountListMenu() {
 // nav list menu
 const navListMenuItems = [
   {
-    title: "About Us",
-    href: "/astro-launch-ui/about"
+    title: "Usuarios",
+    href: "/users"
   },
   {
-    title: "Landing Page",
-    href: "/astro-launch-ui/landing"
+    title: "Gestion de Citas medicas",
+    href: "/citas"
   },
   {
     title: "404",
@@ -222,16 +219,6 @@ export default function Example() {
             <NavList />
           </div>
           <div className="hidden gap-2 lg:flex">
-            <a href="./login">
-              <Button variant="text" size="sm" color="blue-gray">
-                Sign In
-              </Button>
-            </a>
-            <a href="/astro-launch-ui/signup">
-              <Button size="sm" color="black">
-                Sign Up
-              </Button>
-            </a>
           </div>
           <IconButton
             variant="text"
