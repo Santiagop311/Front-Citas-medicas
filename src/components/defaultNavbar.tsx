@@ -22,6 +22,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import ThemeProvider from "./theme-provider";
+import NavbarT from "./navbar"
 
  
 const colors = {
@@ -205,50 +206,8 @@ export default function Example() {
  
   return (
     <ThemeProvider>
-      <Navbar className="absolute mx-auto left-0 right-0 top-3 max-w-screen-xl px-4 py-2 z-10">
-        <div className="flex items-center justify-between text-blue-gray-900">
-          <Typography
-            as="a"
-            href="/astro-launch-ui/"
-            variant="h6"
-            className="mr-4 cursor-pointer py-1.5 lg:ml-2"
-          >
-            AstroLaunch UI
-          </Typography>
-          <div className="hidden lg:block">
-            <NavList />
-          </div>
-          <div className="hidden gap-2 lg:flex">
-          </div>
-          <IconButton
-            variant="text"
-            color="blue-gray"
-            className="lg:hidden"
-            onClick={() => setOpenNav(!openNav)}
-          >
-            {openNav ? (
-              <XMarkIcon className="h-6 w-6" strokeWidth={2} />
-            ) : (
-              <Bars3Icon className="h-6 w-6" strokeWidth={2} />
-            )}
-          </IconButton>
-        </div>
-        <Collapse open={openNav}>
-          <NavList />
-          <div className="flex w-full flex-nowrap items-center gap-2 lg:hidden">
-            <a href="/astro-launch-ui/login">
-              <Button variant="outlined" size="sm" color="black" fullWidth>
-                Sign In
-              </Button>
-            </a>
-            <a href="/astro-launch-ui/signup">
-              <Button size="sm" fullWidth color="black">
-                Sign Up
-              </Button>
-            </a>
-          </div>
-        </Collapse>
-      </Navbar>
+      <NavbarT></NavbarT>
+
     </ThemeProvider>
   );
 }
