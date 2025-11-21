@@ -95,11 +95,9 @@ export default function UsersPage() {
       if (editingUser) {
         // Editar usuario existente
         await axios.put(`http://localhost:8000/api/users/${editingUser.id}`, data);
-        alert("✅ Usuario actualizado correctamente");
       } else {
         // Crear nuevo usuario
         await axios.post("http://localhost:8000/api/users", data);
-        alert("✅ Usuario creado correctamente");
       }
       
       setModalOpen(false);
@@ -108,7 +106,6 @@ export default function UsersPage() {
       loadUsers();
     } catch (error) {
       console.error("Error:", error);
-      alert(editingUser ? "❌ Error al actualizar el usuario" : "❌ Error al crear el usuario");
     } finally {
       setSubmitting(false);
     }
@@ -143,7 +140,6 @@ export default function UsersPage() {
       loadUsers();
     } catch (error) {
       console.error("Error:", error);
-      alert("❌ Error al eliminar el usuario");
     }
   };
 

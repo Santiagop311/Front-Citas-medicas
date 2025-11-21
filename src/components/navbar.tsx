@@ -1,9 +1,4 @@
-// ==========================================
-// SOLUCIÓN 1: Usar padding en lugar de margen
-// ==========================================
 
-// En defaultNavbar.tsx, cambia el sidebar para que empuje el contenido
-// en lugar de superponerse
 
 import React from "react";
 import {
@@ -43,7 +38,6 @@ export default function ComplexNavbar() {
     }
   }, []);
 
-  // Añadir/quitar clase al body cuando se expande
   React.useEffect(() => {
     if (isExpanded) {
       document.body.classList.add('sidebar-expanded');

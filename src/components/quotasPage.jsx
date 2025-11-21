@@ -13,6 +13,7 @@ export default function QuotasPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "", type: "" });
 
   // ===================================
   // FUNCIONES HELPER
@@ -51,6 +52,17 @@ export default function QuotasPage() {
   };
 
   // ===================================
+  // MOSTRAR TOAST
+  // ===================================
+
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "" });
+    }, 3000);
+  };
+
+  // ===================================
   // CARGAR DATOS
   // ===================================
 
@@ -84,7 +96,7 @@ export default function QuotasPage() {
 
     } catch (error) {
       console.error("Error cargando datos:", error);
-      alert("Error al cargar los datos");
+      showToast("❌ Error al cargar los datos", "error");
     } finally {
       setLoading(false);
     }
@@ -117,14 +129,14 @@ export default function QuotasPage() {
         }
       });
       
-      alert("✅ Cita creada correctamente");
+      showToast("✅ Cita creada correctamente", "success");
       setModalOpen(false);
       e.target.reset();
       loadData();
 
     } catch (error) {
       console.error("Error:", error);
-      alert("❌ Error al crear la cita: " + (error.response?.data?.message || error.message));
+      showToast("❌ Error al crear la cita: " + (error.response?.data?.message || error.message), "error");
     } finally {
       setSubmitting(false);
     }
@@ -484,6 +496,44 @@ export default function QuotasPage() {
           </div>
         </div>
       )}
+
+      {/* TOAST NOTIFICATION */}
+      {toast.show && (
+        <div className="fixed top-5 right-5 z-50 animate-slideIn">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl ${
+            toast.type === "success" 
+              ? "bg-green-500 text-white" 
+              : "bg-red-500 text-white"
+          }`}>
+            {toast.type === "success" ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            )}
+            <span className="font-semibold">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            transform: translateX(400px);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slideIn {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
 
     </ThemeProvider>
   );
