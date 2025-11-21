@@ -15,9 +15,6 @@ export default function QuotasPage() {
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "" });
 
-  // ===================================
-  // FUNCIONES HELPER
-  // ===================================
 
   const getInitials = (name) => {
     if (!name) return "P";
@@ -51,9 +48,7 @@ export default function QuotasPage() {
     return estados[estadoString] || 1;
   };
 
-  // ===================================
-  // MOSTRAR TOAST
-  // ===================================
+
 
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
@@ -61,10 +56,6 @@ export default function QuotasPage() {
       setToast({ show: false, message: "", type: "" });
     }, 3000);
   };
-
-  // ===================================
-  // CARGAR DATOS
-  // ===================================
 
   useEffect(() => {
     loadData();
@@ -102,9 +93,6 @@ export default function QuotasPage() {
     }
   };
 
-  // ===================================
-  // CREAR CITA
-  // ===================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -162,18 +150,12 @@ export default function QuotasPage() {
     return matchesSearch && matchesStatus;
   });
 
-  // ===================================
-  // ESTADÍSTICAS
-  // ===================================
 
   const totalCitas = allCitas.length;
   const confirmadas = allCitas.filter(c => c.estado === 2).length;
   const pendientes = allCitas.filter(c => c.estado === 1).length;
   const percentConfirmadas = totalCitas > 0 ? Math.round((confirmadas / totalCitas) * 100) : 0;
 
-  // ===================================
-  // RENDER
-  // ===================================
 
   return (
     <ThemeProvider>
