@@ -83,7 +83,7 @@ export function SignIn() {
             </div>
           </div>
           
-          <h1 className="text-4xl font-bold text-white mb-2">La Nueva EPS</h1>
+          <h1 className="text-4xl font-bold text-white mb-2">La SOS EPS</h1>
           <p className="text-blue-200 text-lg mb-1">Portal de Gestión Sanitaria</p>
           <p className="text-blue-300 text-sm">Acceso seguro al sistema de salud</p>
         </div>
@@ -240,10 +240,10 @@ export function SignIn() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-blue-300 text-sm">
-          <p>© 2024 La Nueva EPS. Todos los derechos reservados.</p>
+          <p>© 2025 La SOS EPS. Todos los derechos reservados.</p>
         </div>
       </div>
-    </div>
+    </div>  
   );
 }
 

@@ -144,7 +144,7 @@ export function Footer() {
                   </svg>
                 </div>
                 <Typography variant="h5" className="text-white font-bold">
-                  La Nueva EPS
+                  SOS EPS
                 </Typography>
               </div>
               <Typography className="text-gray-400 mb-6">
@@ -229,7 +229,7 @@ export function Footer() {
           <div className="border-t border-gray-800 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <Typography className="text-gray-400 text-sm text-center md:text-left">
-                © {YEAR} La Nueva EPS. Todos los derechos reservados.
+                © {YEAR} La SOS EPS. Todos los derechos reservados.
               </Typography>
               
               <div className="flex items-center gap-6 text-gray-400 text-sm">

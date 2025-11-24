@@ -119,7 +119,7 @@ export default function ComplexNavbar() {
             </div>
             <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}`}>
               <Typography variant="h6" className="text-white font-bold whitespace-nowrap">
-                La Nueva EPS
+                SOS EPS
               </Typography>
               <Typography variant="small" className="text-gray-400 whitespace-nowrap text-xs">
                 Platform de Gestión
@@ -241,7 +241,7 @@ export default function ComplexNavbar() {
             </div>
             <div>
               <Typography variant="h5" className="text-white font-bold">
-                La Nueva EPS
+                SOS EPS
               </Typography>
               <Typography variant="small" className="text-gray-400">
                 Platform de Gestión

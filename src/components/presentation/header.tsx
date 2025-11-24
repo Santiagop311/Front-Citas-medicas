@@ -28,7 +28,7 @@ export function HeroPresentation() {
                 variant="small"
                 className="font-semibold text-blue-700"
               >
-                Bienvenido a La Nueva EPS
+                Bienvenido a La SOS EPS
               </Typography>
             </div>
 
@@ -43,7 +43,7 @@ export function HeroPresentation() {
 
             {/* Descripción */}
             <Typography variant="lead" color="blue-gray" className="mb-8 text-lg lg:pr-12 text-gray-600">
-              La Nueva EPS es tu aliado en el cuidado de la salud. Contamos con una red de más de 1,200 médicos especialistas, 156 centros médicos asociados y disponibilidad 24/7 para atender tus necesidades.
+              La SOS EPS es tu aliado en el cuidado de la salud. Contamos con una red de más de 1,200 médicos especialistas, 156 centros médicos asociados y disponibilidad 24/7 para atender tus necesidades.
             </Typography>
 
             {/* Lista de características */}
