@@ -12,6 +12,7 @@ export default function ReportsPage() {
     prescriptions: [],
   });
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     loadReports();
@@ -19,23 +20,53 @@ export default function ReportsPage() {
 
   const loadReports = async () => {
     setLoading(true);
+    setErrorMessage("");
     try {
-      const [users, appointments, medications, clinicalRecords, prescriptions] = await Promise.all([
-        api.get("/users"),
-        api.get("/quotas"),
-        api.get("/medications"),
-        api.get("/clinical-records"),
-        api.get("/prescriptions"),
-      ]);
-      setData({
-        users: users.data,
-        appointments: appointments.data,
-        medications: medications.data,
-        clinicalRecords: clinicalRecords.data,
-        prescriptions: prescriptions.data,
+      const endpoints = [
+        ["users", "/users"],
+        ["appointments", "/quotas"],
+        ["medications", "/medications"],
+        ["clinicalRecords", "/clinical-records"],
+        ["prescriptions", "/prescriptions"],
+      ];
+
+      const responses = await Promise.allSettled(
+        endpoints.map(([, endpoint]) => api.get(endpoint))
+      );
+
+      const nextData = {
+        users: [],
+        appointments: [],
+        medications: [],
+        clinicalRecords: [],
+        prescriptions: [],
+      };
+      const failed = [];
+
+      responses.forEach((response, index) => {
+        const [key, endpoint] = endpoints[index];
+        if (response.status === "fulfilled") {
+          nextData[key] = Array.isArray(response.value.data) ? response.value.data : [];
+        } else {
+          failed.push(endpoint);
+          console.error(`Error cargando reporte ${endpoint}:`, response.reason);
+        }
       });
+
+      setData({
+        users: nextData.users,
+        appointments: nextData.appointments,
+        medications: nextData.medications,
+        clinicalRecords: nextData.clinicalRecords,
+        prescriptions: nextData.prescriptions,
+      });
+
+      if (failed.length > 0) {
+        setErrorMessage(`No se pudieron cargar algunos datos: ${failed.join(", ")}`);
+      }
     } catch (error) {
       console.error("Error cargando reportes:", error);
+      setErrorMessage("No se pudieron cargar los reportes.");
     } finally {
       setLoading(false);
     }
@@ -69,6 +100,12 @@ export default function ReportsPage() {
             <h1 className="text-4xl font-bold text-gray-900">Reportes</h1>
             <p className="text-gray-600 mt-1">Resumen operativo del sistema medico</p>
           </div>
+
+          {errorMessage && (
+            <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl">
+              {errorMessage}
+            </div>
+          )}
 
           {loading ? (
             <div className="text-center text-gray-500 bg-white shadow-md p-6 rounded-lg">Cargando reportes...</div>

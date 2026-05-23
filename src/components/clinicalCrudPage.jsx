@@ -10,7 +10,9 @@ const moduleConfig = {
     endpoint: "/medications",
     createLabel: "Nuevo Medicamento",
     searchPlaceholder: "Buscar por nombre, presentacion o descripcion...",
-    accent: "from-cyan-500 to-blue-500",
+    accent: "bg-gradient-to-r from-cyan-500 to-blue-500",
+    avatarAccent: "bg-gradient-to-br from-cyan-500 to-blue-500",
+    buttonStyle: { background: "linear-gradient(90deg, #06b6d4, #3b82f6)" },
     avatar: "M",
     fields: [
       { name: "name", label: "Nombre", type: "text", required: true },
@@ -43,7 +45,9 @@ const moduleConfig = {
     endpoint: "/clinical-records",
     createLabel: "Nueva Historia",
     searchPlaceholder: "Buscar por paciente, medico o diagnostico...",
-    accent: "from-emerald-500 to-teal-500",
+    accent: "bg-gradient-to-r from-blue-500 to-teal-500",
+    avatarAccent: "bg-gradient-to-br from-blue-500 to-teal-500",
+    buttonStyle: { background: "linear-gradient(90deg, #3b82f6, #14b8a6)" },
     avatar: "H",
     fields: [
       { name: "patient_id", label: "Paciente", type: "select", source: "affiliates", required: true },
@@ -80,7 +84,9 @@ const moduleConfig = {
     endpoint: "/prescriptions",
     createLabel: "Nueva Receta",
     searchPlaceholder: "Buscar por paciente, medicamento o frecuencia...",
-    accent: "from-violet-500 to-blue-500",
+    accent: "bg-gradient-to-r from-violet-500 to-blue-500",
+    avatarAccent: "bg-gradient-to-br from-violet-500 to-blue-500",
+    buttonStyle: { background: "linear-gradient(90deg, #8b5cf6, #3b82f6)" },
     avatar: "R",
     fields: [
       { name: "clinical_record_id", label: "Historia clinica", type: "select", source: "clinicalRecords", required: true },
@@ -164,11 +170,12 @@ export default function ClinicalCrudPage({ module = "medications" }) {
     loadData();
   }, [module]);
 
-  const loadData = async () => {
+  const loadData = async ({ showErrors = true } = {}) => {
     setLoading(true);
     try {
-      const sources = new Set(config.fields.map((field) => field.source).filter(Boolean));
-      const requests = [api.get(config.endpoint)];
+      const recordsResponse = await api.get(config.endpoint);
+      setItems(recordsResponse.data);
+
       const sourceEndpoints = {
         affiliates: "/affiliates",
         doctors: "/users",
@@ -176,13 +183,23 @@ export default function ClinicalCrudPage({ module = "medications" }) {
         clinicalRecords: "/clinical-records",
         medications: "/medications",
       };
+
+      const sources = new Set(config.fields.map((field) => field.source).filter(Boolean));
       const sourceNames = Array.from(sources);
-      sourceNames.forEach((source) => requests.push(api.get(sourceEndpoints[source])));
-      const responses = await Promise.all(requests);
-      setItems(responses[0].data);
+      const lookupResponses = await Promise.allSettled(
+        sourceNames.map((source) => api.get(sourceEndpoints[source]))
+      );
+
       const nextLookups = {};
       sourceNames.forEach((source, index) => {
-        let data = responses[index + 1].data;
+        const response = lookupResponses[index];
+        if (response.status !== "fulfilled") {
+          console.error(`Error cargando lookup ${source}:`, response.reason);
+          nextLookups[source] = lookups[source] || [];
+          return;
+        }
+
+        let data = response.value.data;
         if (source === "doctors") {
           data = data.filter((user) => {
             const role = user.role?.name?.toLowerCase();
@@ -192,9 +209,13 @@ export default function ClinicalCrudPage({ module = "medications" }) {
         nextLookups[source] = data;
       });
       setLookups(nextLookups);
+      return true;
     } catch (error) {
       console.error("Error cargando modulo clinico:", error);
-      showToast("No se pudieron cargar los datos.", "error");
+      if (showErrors) {
+        showToast("No se pudieron cargar los datos.", "error");
+      }
+      return false;
     } finally {
       setLoading(false);
     }
@@ -221,14 +242,18 @@ export default function ClinicalCrudPage({ module = "medications" }) {
     try {
       if (editingItem) {
         await api.put(`${config.endpoint}/${editingItem.id}`, data);
-        showToast("Registro actualizado correctamente.");
       } else {
         await api.post(config.endpoint, data);
-        showToast("Registro creado correctamente.");
       }
       setModalOpen(false);
       setEditingItem(null);
-      await loadData();
+      const refreshed = await loadData({ showErrors: false });
+      showToast(
+        refreshed
+          ? (editingItem ? "Registro actualizado correctamente." : "Registro creado correctamente.")
+          : "Registro guardado, pero no se pudo refrescar la lista.",
+        refreshed ? "success" : "error"
+      );
     } catch (error) {
       console.error("Error guardando:", error);
       showToast(error.response?.data?.message || "No se pudo guardar el registro.", "error");
@@ -241,8 +266,11 @@ export default function ClinicalCrudPage({ module = "medications" }) {
     if (!confirm("Seguro que deseas eliminar este registro?")) return;
     try {
       await api.delete(`${config.endpoint}/${item.id}`);
-      showToast("Registro eliminado correctamente.");
-      await loadData();
+      const refreshed = await loadData({ showErrors: false });
+      showToast(
+        refreshed ? "Registro eliminado correctamente." : "Registro eliminado, pero no se pudo refrescar la lista.",
+        refreshed ? "success" : "error"
+      );
     } catch (error) {
       console.error("Error eliminando:", error);
       showToast(error.response?.data?.message || "No se pudo eliminar el registro.", "error");
@@ -264,7 +292,8 @@ export default function ClinicalCrudPage({ module = "medications" }) {
                 setEditingItem(null);
                 setModalOpen(true);
               }}
-              className={`flex items-center gap-2 bg-gradient-to-r ${config.accent} text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:scale-105 transition-all`}
+              style={config.buttonStyle}
+              className="flex items-center gap-2 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:scale-105 transition-all"
             >
               <span className="text-xl leading-none">+</span>
               {config.createLabel}
@@ -307,7 +336,7 @@ export default function ClinicalCrudPage({ module = "medications" }) {
                   <div key={item.id} className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all border border-gray-100 p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                       <div className="flex items-center gap-4 min-w-0">
-                        <div className={`w-14 h-14 bg-gradient-to-br ${config.accent} rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg`}>
+                        <div className={`w-14 h-14 ${config.avatarAccent} rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg`}>
                           {config.avatar}
                         </div>
                         <div className="min-w-0">
@@ -387,7 +416,7 @@ export default function ClinicalCrudPage({ module = "medications" }) {
 
               <div className="md:col-span-2 flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setModalOpen(false)} className="px-5 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50">Cancelar</button>
-                <button type="submit" disabled={submitting} className={`px-5 py-3 bg-gradient-to-r ${config.accent} text-white rounded-xl disabled:opacity-50`}>
+                <button type="submit" disabled={submitting} style={config.buttonStyle} className="px-5 py-3 text-white rounded-xl disabled:opacity-50">
                   {submitting ? "Guardando..." : "Guardar"}
                 </button>
               </div>
