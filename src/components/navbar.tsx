@@ -15,6 +15,9 @@ import {
   ArrowRightOnRectangleIcon,
   Bars3Icon,
   XMarkIcon,
+  BeakerIcon,
+  ClipboardDocumentListIcon,
+  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
 
 const menuItems = [
@@ -23,6 +26,9 @@ const menuItems = [
   { label: "Reportes", icon: ChartBarIcon, href: "/reportes" },
   { label: "Citas", icon: HeartIcon, href: "/quotas" },
   { label: "Médicos", icon: UserIcon, href: "/medicos" },
+  { label: "Medicamentos", icon: BeakerIcon, href: "/medications" },
+  { label: "Historias", icon: ClipboardDocumentListIcon, href: "/clinical-records" },
+  { label: "Recetas", icon: DocumentTextIcon, href: "/prescriptions" },
 ];
 
 export default function ComplexNavbar() {
@@ -65,7 +71,7 @@ export default function ComplexNavbar() {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      setTimeout(() => (window.location.href = "/astro-launch-ui/login"), 500);
+      setTimeout(() => (window.location.href = "/login"), 300);
     }
   };
 
@@ -109,12 +115,12 @@ export default function ComplexNavbar() {
         onMouseEnter={() => setIsExpanded(true)}
         onMouseLeave={() => setIsExpanded(false)}
         className={`hidden lg:flex fixed top-0 left-0 h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white transition-all duration-300 z-50 flex-col shadow-2xl
-          ${isExpanded ? "w-64" : "w-20"}`}
+          ${isExpanded ? "w-64" : "w-[76px]"}`}
       >
         {/* Header */}
-        <div className="p-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className={`${isExpanded ? "w-12 h-12" : "w-10 h-10"} bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg transition-all duration-300`}>
+        <div className={isExpanded ? "p-4" : "px-3 py-5"}>
+          <div className={`flex items-center mb-2 ${isExpanded ? "gap-3" : "justify-center"}`}>
+            <div className={`${isExpanded ? "w-12 h-12" : "w-11 h-11"} bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg transition-all duration-300`}>
               E
             </div>
             <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}`}>
@@ -135,7 +141,7 @@ export default function ComplexNavbar() {
         </div>
 
         {/* Navegación */}
-        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+        <nav className={`${isExpanded ? "px-3" : "px-2"} flex-1 space-y-2 overflow-y-auto`}>
           {menuItems.map(({ label, icon: Icon, href }) => {
             const isActive =
               typeof window !== "undefined" && window.location.pathname === href;
@@ -143,31 +149,25 @@ export default function ComplexNavbar() {
               <a
                 key={label}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all group ${
+                className={`flex items-center rounded-xl transition-all group ${
                   isActive
-                    ? "bg-blue-600 text-white"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-950/30"
                     : "text-gray-300 hover:bg-gray-700 hover:text-white"
-                }`}
+                } ${isExpanded ? "gap-3 px-3 py-3" : "justify-center h-12 w-12 mx-auto"}`}
                 title={!isExpanded ? label : ""}
               >
                 <Icon className={`${isExpanded ? "w-5 h-5" : "w-6 h-6"} transition-all flex-shrink-0`} />
-                <Typography 
-                  className={`font-medium whitespace-nowrap transition-all duration-300 ${
-                    isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 absolute"
-                  }`}
-                >
-                  {label}
-                </Typography>
+                {isExpanded && <Typography className="font-medium whitespace-nowrap">{label}</Typography>}
               </a>
             );
           })}
         </nav>
 
         {/* Usuario */}
-        <div className="p-3 border-t border-gray-700">
-          <div className={`bg-gray-800 rounded-xl p-3 border border-gray-700 transition-all ${isExpanded ? "" : "flex flex-col items-center"}`}>
-            <div className={`flex items-center gap-3 mb-3 ${isExpanded ? "" : "flex-col"}`}>
-              <div className={`${isExpanded ? "w-10 h-10" : "w-12 h-12"} bg-gradient-to-br from-cyan-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold shadow-md transition-all flex-shrink-0`}>
+        <div className={`${isExpanded ? "p-3" : "p-2"} border-t border-gray-700`}>
+          <div className={`bg-gray-800/80 rounded-2xl border border-gray-700 transition-all ${isExpanded ? "p-3" : "p-2 flex flex-col items-center gap-2"}`}>
+            <div className={`flex items-center gap-3 ${isExpanded ? "mb-3" : ""}`}>
+              <div className={`${isExpanded ? "w-10 h-10" : "w-11 h-11"} bg-gradient-to-br from-cyan-400 to-teal-500 rounded-full flex items-center justify-center text-white font-bold shadow-md transition-all flex-shrink-0`}>
                 <span className={isExpanded ? "text-sm" : "text-base"}>
                   {getInitials(userInfo.name)}
                 </span>
@@ -193,11 +193,11 @@ export default function ComplexNavbar() {
               </div>
             )}
 
-            <div className={`flex gap-2 ${isExpanded ? "flex-row" : "flex-col"}`}>
+            <div className={`flex gap-2 ${isExpanded ? "flex-row" : "flex-col w-full items-center"}`}>
               <button
                 onClick={() => (window.location.href = "/profile")}
-                className={`flex items-center justify-center gap-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition ${
-                  isExpanded ? "flex-1 py-2" : "p-3"
+                className={`flex items-center justify-center gap-1 bg-gray-700 hover:bg-gray-600 text-white rounded-xl transition ${
+                  isExpanded ? "flex-1 py-2" : "w-11 h-11"
                 }`}
                 title={!isExpanded ? "Perfil" : ""}
               >
@@ -208,8 +208,8 @@ export default function ComplexNavbar() {
               <button
                 onClick={handleLogout}
                 disabled={loadingLogout}
-                className={`flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50 ${
-                  isExpanded ? "flex-1 py-2" : "p-3"
+                className={`flex items-center justify-center gap-1 bg-red-600 hover:bg-red-700 text-white rounded-xl transition disabled:opacity-50 ${
+                  isExpanded ? "flex-1 py-2" : "w-11 h-11"
                 }`}
                 title={!isExpanded ? "Salir" : ""}
               >

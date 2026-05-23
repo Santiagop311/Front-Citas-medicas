@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import ThemeProvider from "./theme-provider";
 import ComplexNavbar from "./defaultNavbar";
+import api from "../lib/api";
 
 export default function QuotasPage() {
   const [allCitas, setAllCitas] = useState([]);
@@ -65,10 +65,10 @@ export default function QuotasPage() {
     try {
       setLoading(true);
 
-      const citasRes = await axios.get("http://localhost:8000/api/quotas");
+      const citasRes = await api.get("/quotas");
       setAllCitas(citasRes.data);
 
-      const usersRes = await axios.get("http://localhost:8000/api/users");
+      const usersRes = await api.get("/users");
       const allUsers = usersRes.data;
       const medicosFiltered = allUsers.filter(u => 
         u.role?.name?.toLowerCase() === "médico" || 
@@ -77,10 +77,10 @@ export default function QuotasPage() {
       );
       setMedicos(medicosFiltered);
 
-      const affiliatesRes = await axios.get("http://localhost:8000/api/affiliates");
+      const affiliatesRes = await api.get("/affiliates");
       setAffiliates(affiliatesRes.data);
 
-      const typesRes = await axios.get("http://localhost:8000/api/appointments");
+      const typesRes = await api.get("/appointments");
       setTypesAppointments(typesRes.data);
 
       console.log("Datos cargados:", { citasRes: citasRes.data, medicosFiltered, affiliates: affiliatesRes.data, types: typesRes.data });
@@ -109,13 +109,7 @@ export default function QuotasPage() {
     };
 
     try {
-      const token = localStorage.getItem('token');
-      await axios.post("http://localhost:8000/api/quotas", data, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      await api.post("/quotas", data);
       
       showToast("✅ Cita creada correctamente", "success");
       setModalOpen(false);

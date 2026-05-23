@@ -1,14 +1,14 @@
 ---
-import UsersPage from "../components/usersPage"
+import ClinicalCrudPage from "../components/clinicalCrudPage.jsx";
 ---
 
 <html lang="es">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Gestión de Usuarios</title>
+    <title>Medicamentos</title>
   </head>
   <body>
-    <UsersPage client:only="react" />
+    <ClinicalCrudPage module="medications" client:only="react" />
   </body>
 </html>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import ThemeProvider from "./theme-provider";
 import ComplexNavbar from "./defaultNavbar";
+import api from "../lib/api";
 
 export default function UsersPage() {
   const [allUsers, setAllUsers] = useState([]);
@@ -12,6 +12,7 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
   // ===================================
   // FUNCIONES HELPER
@@ -54,6 +55,11 @@ export default function UsersPage() {
     return colors[key] || 'bg-gray-100 text-gray-700';
   };
 
+  const showToast = (message, type = "success") => {
+    setToast({ show: true, message, type });
+    setTimeout(() => setToast({ show: false, message: "", type }), 3000);
+  };
+
   // ===================================
   // CARGAR DATOS
   // ===================================
@@ -65,11 +71,11 @@ export default function UsersPage() {
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("http://localhost:8000/api/users");
+      const res = await api.get("/users");
       setAllUsers(res.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error cargando usuarios:", error);
-      alert("Error al cargar los usuarios");
+      showToast("Error al cargar los usuarios", "error");
     } finally {
       setLoading(false);
     }
@@ -94,18 +100,21 @@ export default function UsersPage() {
     try {
       if (editingUser) {
         // Editar usuario existente
-        await axios.put(`http://localhost:8000/api/users/${editingUser.id}`, data);
+        await api.put(`/users/${editingUser.id}`, data);
+        showToast("Usuario actualizado correctamente");
       } else {
         // Crear nuevo usuario
-        await axios.post("http://localhost:8000/api/users", data);
+        await api.post("/users", data);
+        showToast("Usuario creado correctamente");
       }
       
       setModalOpen(false);
       setEditingUser(null);
       e.target.reset();
       loadUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error);
+      showToast(error.response?.data?.message || "No se pudo guardar el usuario", "error");
     } finally {
       setSubmitting(false);
     }
@@ -133,13 +142,14 @@ export default function UsersPage() {
     if (!userToDelete) return;
 
     try {
-      await axios.delete(`http://localhost:8000/api/users/${userToDelete.id}`);
-      alert("✅ Usuario eliminado correctamente");
+      await api.delete(`/users/${userToDelete.id}`);
+      showToast("Usuario eliminado correctamente");
       setDeleteModalOpen(false);
       setUserToDelete(null);
       loadUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error:", error);
+      showToast(error.response?.data?.message || "No se pudo eliminar el usuario", "error");
     }
   };
 
@@ -436,13 +446,30 @@ export default function UsersPage() {
         </div>
       )}
 
+      {toast.show && (
+        <div className="fixed top-5 right-5 z-[80] animate-slideIn">
+          <div className={`px-6 py-4 rounded-xl shadow-2xl text-white font-semibold ${
+            toast.type === "success" ? "bg-green-500" : "bg-red-500"
+          }`}>
+            {toast.message}
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes slideIn {
+          from { transform: translateX(400px); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
         .animate-fadeIn {
           animation: fadeIn 0.3s ease-in-out;
+        }
+        .animate-slideIn {
+          animation: slideIn 0.3s ease-out;
         }
       `}</style>
 

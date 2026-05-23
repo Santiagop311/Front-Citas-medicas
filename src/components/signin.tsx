@@ -1,4 +1,5 @@
 import { useState } from "react";
+import api from "../lib/api";
 
 export function SignIn() {
   // 🔹 Estados
@@ -14,31 +15,26 @@ export function SignIn() {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await api.post("/login", { email, password });
+      const data = res.data;
 
-      const data = await res.json();
-
-      if (res.ok) {
+      if (data?.token) {
         // 🔹 Guarda el token y la info del usuario
         localStorage.setItem("token", data.token);
         
         localStorage.setItem("user", JSON.stringify(data.user));
 
         // 🔹 También guardamos el token en una cookie para el middleware de Astro
-        document.cookie = `token=${data.token}; path=/;`;
+        document.cookie = `token=${data.token}; path=/; max-age=86400; SameSite=Lax`;
 
         // 🔹 Redirige al inicio
-        window.location.href = "/";
+        window.location.assign("/");
       } else {
-        alert(data.error || "Credenciales incorrectas");
+        alert("Credenciales incorrectas");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error de conexión:", error);
-      alert("No se pudo conectar con el servidor.");
+      alert(error.response?.data?.error || "No se pudo conectar con el servidor.");
     } finally {
       setLoading(false);
     }

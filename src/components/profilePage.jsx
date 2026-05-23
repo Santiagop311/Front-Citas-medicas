@@ -11,77 +11,95 @@ import {
   Tab,
   TabPanel,
 } from "@material-tailwind/react";
-import { 
-  UserCircleIcon, 
-  EnvelopeIcon, 
+import {
+  UserCircleIcon,
+  EnvelopeIcon,
   KeyIcon,
   ShieldCheckIcon,
   ClockIcon,
   HeartIcon,
   CalendarIcon,
-  UserGroupIcon
+  UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import ThemeProvider from "./theme-provider";
 import ComplexNavbar from "./defaultNavbar";
+import api from "../lib/api";
 
 export default function ProfilePage() {
   const [user, setUser] = useState({ name: "", email: "" });
+  const [stats, setStats] = useState({
+    affiliates: 0,
+    appointments: 0,
+    doctors: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("info");
   const [message, setMessage] = useState("");
 
-
   useEffect(() => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      setUser(storedUser);
-      if (storedUser) setUser(JSON.parse(storedUser));
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+      setUser(storedUser || { name: "", email: "" });
     } catch (e) {
       console.warn("No se pudo parsear user en localStorage", e);
     }
+
+    loadStats();
   }, []);
 
-const handlePasswordUpdate = async (e) => {
-  e.preventDefault();
-  if (!newPassword) return setMessage("Ingresa la nueva contraseña.");
-  setLoading(true);
+  const loadStats = async () => {
+    setStatsLoading(true);
+    try {
+      const [affiliatesRes, quotasRes, usersRes] = await Promise.all([
+        api.get("/affiliates"),
+        api.get("/quotas"),
+        api.get("/users"),
+      ]);
 
-  const token = localStorage.getItem("token");
-  const storedUser = JSON.parse(localStorage.getItem("user"));
-  const userId = storedUser?.id;
+      const doctors = usersRes.data.filter((item) => {
+        const role = item.role?.name?.toLowerCase();
+        return role === "medico" || role === "médico" || item.role?.id === 2;
+      });
 
-  if (!storedUser) {
-    setMessage("No se encontró el usuario autenticado.");
-    return;
-  }
+      setStats({
+        affiliates: affiliatesRes.data.length,
+        appointments: quotasRes.data.length,
+        doctors: doctors.length,
+      });
+    } catch (error) {
+      console.error("Error cargando estadisticas del perfil:", error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
 
-  const res = await fetch(`http://localhost:8000/api/users/${userId}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: token ? `Bearer ${token}` : undefined,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      password: newPassword,
-    }),
-  });
+  const handlePasswordUpdate = async (e) => {
+    e.preventDefault();
+    if (!newPassword) return setMessage("Ingresa la nueva contrasena.");
+    setLoading(true);
 
-  const data = await res.json();
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const userId = storedUser?.id;
 
-  if (res.ok) {
-    setMessage("✔️ Contraseña actualizada correctamente.");
-    setNewPassword("");
-  } else {
-    setMessage(data.message || "❌ Error al actualizar la contraseña.");
-  }
+    if (!userId) {
+      setMessage("No se encontro el usuario autenticado.");
+      setLoading(false);
+      return;
+    }
 
-  setLoading(false);
-
-  setTimeout(() => setMessage(""), 3000); 
-};
-
-
+    try {
+      await api.patch(`/users/${userId}`, { password: newPassword });
+      setMessage("Contrasena actualizada correctamente.");
+      setNewPassword("");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Error al actualizar la contrasena.");
+    } finally {
+      setLoading(false);
+      setTimeout(() => setMessage(""), 3000);
+    }
+  };
 
   const getInitials = (name) => {
     if (!name) return "U";
@@ -93,103 +111,78 @@ const handlePasswordUpdate = async (e) => {
       .substring(0, 2);
   };
 
+  const statCards = [
+    {
+      label: "Afiliados Gestionados",
+      value: stats.affiliates,
+      icon: HeartIcon,
+      iconClass: "bg-blue-50 text-blue-500",
+    },
+    {
+      label: "Citas Coordinadas",
+      value: stats.appointments,
+      icon: ClockIcon,
+      iconClass: "bg-cyan-50 text-cyan-500",
+    },
+    {
+      label: "Medicos en Red",
+      value: stats.doctors,
+      icon: ShieldCheckIcon,
+      iconClass: "bg-indigo-50 text-indigo-500",
+    },
+  ];
+
   return (
     <ThemeProvider>
       <ComplexNavbar />
-      
+
       <div className="min-h-screen bg-gray-50 py-8 px-4">
-        {/* Header con degradado */}
         <div className="max-w-6xl mx-auto mb-8">
           <div className="bg-gradient-to-r from-purple-600 to-purple-500 rounded-3xl p-8 text-white shadow-xl">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div className="flex items-center gap-6">
-                {/* Avatar */}
                 <div className="w-24 h-24 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-3xl font-bold">
                   {getInitials(user.name)}
                 </div>
-                
-                {/* Info del usuario */}
+
                 <div>
                   <Typography variant="h3" className="text-white font-bold mb-1">
                     {user.name || "Usuario"}
                   </Typography>
-                  <Typography className="text-purple-100 mb-1">
-                    Superadmin
-                  </Typography>
-                  <Typography className="text-purple-200 text-sm">
-                    Administración
-                  </Typography>
+                  <Typography className="text-purple-100 mb-1">Superadmin</Typography>
+                  <Typography className="text-purple-200 text-sm">Administracion</Typography>
                 </div>
               </div>
 
-              {/* Botón Editar Perfil */}
-              <Button 
-                variant="filled"
-                className="bg-white text-purple-600 hover:bg-purple-50 shadow-lg"
-              >
+              <Button variant="filled" className="bg-white text-purple-600 hover:bg-purple-50 shadow-lg">
                 Editar Perfil
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Estadísticas */}
         <div className="max-w-6xl mx-auto mb-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Card 1 */}
-            <Card className="shadow-md hover:shadow-xl transition-shadow">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Typography color="gray" className="font-medium">
-                    Afiliados Gestionados
-                  </Typography>
-                  <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
-                    <HeartIcon className="w-6 h-6 text-blue-500" />
+            {statCards.map(({ label, value, icon: Icon, iconClass }) => (
+              <Card key={label} className="shadow-md hover:shadow-xl transition-shadow">
+                <CardBody className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Typography color="gray" className="font-medium">
+                      {label}
+                    </Typography>
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${iconClass}`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
                   </div>
-                </div>
-                <Typography variant="h2" color="blue-gray" className="font-bold">
-                  2,450
-                </Typography>
-              </CardBody>
-            </Card>
-
-            {/* Card 2 */}
-            <Card className="shadow-md hover:shadow-xl transition-shadow">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Typography color="gray" className="font-medium">
-                    Citas Coordinadas
+                  <Typography variant="h2" color="blue-gray" className="font-bold">
+                    {statsLoading ? "..." : value}
                   </Typography>
-                  <div className="w-12 h-12 bg-cyan-50 rounded-xl flex items-center justify-center">
-                    <ClockIcon className="w-6 h-6 text-cyan-500" />
-                  </div>
-                </div>
-                <Typography variant="h2" color="blue-gray" className="font-bold">
-                  458
-                </Typography>
-              </CardBody>
-            </Card>
-
-            {/* Card 3 */}
-            <Card className="shadow-md hover:shadow-xl transition-shadow">
-              <CardBody className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Typography color="gray" className="font-medium">
-                    Médicos en Red
-                  </Typography>
-                  <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center">
-                    <ShieldCheckIcon className="w-6 h-6 text-indigo-500" />
-                  </div>
-                </div>
-                <Typography variant="h2" color="blue-gray" className="font-bold">
-                  1,240
-                </Typography>
-              </CardBody>
-            </Card>
+                </CardBody>
+              </Card>
+            ))}
           </div>
         </div>
 
-        {/* Tabs de Información */}
         <div className="max-w-6xl mx-auto">
           <Card className="shadow-lg">
             <Tabs value={activeTab}>
@@ -199,31 +192,19 @@ const handlePasswordUpdate = async (e) => {
                   className: "bg-blue-500 shadow-none",
                 }}
               >
-                <Tab
-                  value="info"
-                  onClick={() => setActiveTab("info")}
-                  className={activeTab === "info" ? "text-blue-600" : "text-gray-600"}
-                >
+                <Tab value="info" onClick={() => setActiveTab("info")} className={activeTab === "info" ? "text-blue-600" : "text-gray-600"}>
                   <div className="flex items-center gap-2">
                     <UserCircleIcon className="w-5 h-5" />
-                    Información Personal
+                    Informacion Personal
                   </div>
                 </Tab>
-                <Tab
-                  value="seguridad"
-                  onClick={() => setActiveTab("seguridad")}
-                  className={activeTab === "seguridad" ? "text-blue-600" : "text-gray-600"}
-                >
+                <Tab value="seguridad" onClick={() => setActiveTab("seguridad")} className={activeTab === "seguridad" ? "text-blue-600" : "text-gray-600"}>
                   <div className="flex items-center gap-2">
                     <ShieldCheckIcon className="w-5 h-5" />
                     Seguridad
                   </div>
                 </Tab>
-                <Tab
-                  value="historial"
-                  onClick={() => setActiveTab("historial")}
-                  className={activeTab === "historial" ? "text-blue-600" : "text-gray-600"}
-                >
+                <Tab value="historial" onClick={() => setActiveTab("historial")} className={activeTab === "historial" ? "text-blue-600" : "text-gray-600"}>
                   <div className="flex items-center gap-2">
                     <ClockIcon className="w-5 h-5" />
                     Historial
@@ -232,30 +213,27 @@ const handlePasswordUpdate = async (e) => {
               </TabsHeader>
 
               <TabsBody>
-                {/* Tab Información Personal */}
                 <TabPanel value="info" className="p-8">
                   <Typography variant="h5" color="blue-gray" className="font-bold mb-6">
-                    Información Personal
+                    Informacion Personal
                   </Typography>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Nombre Completo */}
                     <div>
                       <Typography variant="small" color="gray" className="mb-2 font-medium">
                         Nombre Completo
                       </Typography>
                       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                        <EnvelopeIcon className="w-5 h-5 text-gray-600" />
+                        <UserCircleIcon className="w-5 h-5 text-gray-600" />
                         <Typography variant="paragraph" color="blue-gray" className="font-medium">
                           {user.name || "No disponible"}
                         </Typography>
                       </div>
                     </div>
 
-                    {/* Correo Electrónico */}
                     <div>
                       <Typography variant="small" color="gray" className="mb-2 font-medium">
-                        Correo Electrónico
+                        Correo Electronico
                       </Typography>
                       <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
                         <EnvelopeIcon className="w-5 h-5 text-gray-600" />
@@ -267,7 +245,6 @@ const handlePasswordUpdate = async (e) => {
                   </div>
                 </TabPanel>
 
-                {/* Tab Seguridad */}
                 <TabPanel value="seguridad" className="p-8">
                   <Typography variant="h5" color="blue-gray" className="font-bold mb-6">
                     Seguridad
@@ -275,10 +252,9 @@ const handlePasswordUpdate = async (e) => {
 
                   <div className="max-w-md">
                     <Typography color="gray" className="mb-6">
-                      Actualiza tu contraseña para mantener tu cuenta segura
+                      Actualiza tu contrasena para mantener tu cuenta segura
                     </Typography>
 
-                    {/* <-- Aquí ponemos el mensaje */}
                     {message && (
                       <div className="mb-4 p-3 bg-blue-100 text-blue-700 rounded">
                         {message}
@@ -288,12 +264,12 @@ const handlePasswordUpdate = async (e) => {
                     <form onSubmit={handlePasswordUpdate} className="space-y-6">
                       <div>
                         <Typography variant="small" color="gray" className="mb-2 font-medium">
-                          Nueva Contraseña
+                          Nueva Contrasena
                         </Typography>
                         <Input
                           color="blue"
                           type="password"
-                          label="Ingresa tu nueva contraseña"
+                          label="Ingresa tu nueva contrasena"
                           value={newPassword}
                           onChange={(e) => setNewPassword(e.target.value)}
                           required
@@ -301,22 +277,14 @@ const handlePasswordUpdate = async (e) => {
                         />
                       </div>
 
-                      <Button
-                        color="blue"
-                        type="submit"
-                        fullWidth
-                        disabled={loading}
-                        className="flex items-center justify-center gap-2"
-                      >
+                      <Button color="blue" type="submit" fullWidth disabled={loading} className="flex items-center justify-center gap-2">
                         <ShieldCheckIcon className="w-5 h-5" />
-                        {loading ? "Actualizando..." : "Actualizar contraseña"}
+                        {loading ? "Actualizando..." : "Actualizar contrasena"}
                       </Button>
                     </form>
                   </div>
                 </TabPanel>
 
-
-                {/* Tab Historial */}
                 <TabPanel value="historial" className="p-8">
                   <Typography variant="h5" color="blue-gray" className="font-bold mb-6">
                     Historial de Actividad
@@ -329,10 +297,10 @@ const handlePasswordUpdate = async (e) => {
                       </div>
                       <div className="flex-1">
                         <Typography variant="small" color="blue-gray" className="font-medium">
-                          Última sesión
+                          Perfil consultado
                         </Typography>
                         <Typography variant="small" color="gray">
-                          Hoy a las 10:30 AM
+                          Sesion actual
                         </Typography>
                       </div>
                     </div>
@@ -343,10 +311,10 @@ const handlePasswordUpdate = async (e) => {
                       </div>
                       <div className="flex-1">
                         <Typography variant="small" color="blue-gray" className="font-medium">
-                          Cita coordinada
+                          Citas registradas en el sistema
                         </Typography>
                         <Typography variant="small" color="gray">
-                          Ayer a las 3:45 PM
+                          {statsLoading ? "Cargando..." : stats.appointments}
                         </Typography>
                       </div>
                     </div>
@@ -357,10 +325,10 @@ const handlePasswordUpdate = async (e) => {
                       </div>
                       <div className="flex-1">
                         <Typography variant="small" color="blue-gray" className="font-medium">
-                          Afiliado registrado
+                          Afiliados registrados
                         </Typography>
                         <Typography variant="small" color="gray">
-                          Hace 2 días
+                          {statsLoading ? "Cargando..." : stats.affiliates}
                         </Typography>
                       </div>
                     </div>
